@@ -66,7 +66,7 @@ def initialize_database():
 def get_llm():
     try:
         return ChatGoogleGenerativeAI(
-            model="gemini-pro",
+            model="gemini-1.5-pro",
             convert_system_message_to_human=True,
             temperature=0.0
         )
@@ -124,7 +124,25 @@ async def process_query(request: QueryRequest):
         llm = get_llm()
         chain = create_sql_query_chain(llm, db)
         response = chain.invoke({"question": request.question})
-        sql_query = re.sub(r'^```sql\n|\n```$', '', response).strip()
+        
+        # Enhanced query cleanup
+        sql_query = response
+        # Remove common prefixes and text
+        prefixes_to_remove = [
+            'Question:.*?SQLQuery:', 'SQLQuery:', 'SQL:', 'Query:',
+            'Question:.*?\n'
+        ]
+        for prefix in prefixes_to_remove:
+            sql_query = re.sub(prefix, '', sql_query, flags=re.DOTALL)
+        
+        # Remove markdown code blocks
+        sql_query = re.sub(r'^```sql\n|\n```$', '', sql_query)
+        # Clean up whitespace
+        sql_query = sql_query.strip()
+        
+        if not sql_query:
+            raise ValueError("Failed to generate valid SQL query")
+            
         df_query_result = pd.read_sql_query(sql_query, connection)
 
         if df_query_result.empty:
