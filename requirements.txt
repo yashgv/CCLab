@@ -1,0 +1,17 @@
+langchain
+langchain_community
+langchain_core
+langchain_experimental
+langchain_google_genai
+pandas
+python-dotenv
+tabulate
+
+fastapi
+uvicorn
+streamlit
+pandas
+matplotlib
+python-dotenv
+requests
+pillow
